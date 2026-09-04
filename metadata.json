@@ -1,0 +1,6 @@
+{
+  "name": "Mimari Kat Planı ve 3D Görselleştirici",
+  "description": "Yapay zeka destekli kat planı analizi, 2B çizim tuvali, malzeme seçimi ve 3B görselleştirme arayüzü.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
