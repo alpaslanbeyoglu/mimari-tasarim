@@ -21,6 +21,7 @@ interface Canvas2DProps {
   selectedRoomId: string | null;
   setSelectedRoomId: (id: string | null) => void;
   gridSize: number; // pixels per meter
+  aiScanning?: boolean;
 }
 
 export default function Canvas2D({ 
@@ -28,7 +29,8 @@ export default function Canvas2D({
   setRooms, 
   selectedRoomId, 
   setSelectedRoomId,
-  gridSize = 40 
+  gridSize = 40,
+  aiScanning = false
 }: Canvas2DProps) {
   const [activeTool, setActiveTool] = useState<'select' | 'add' | 'wall' | 'eraser'>('select');
   const [newRoomName, setNewRoomName] = useState('Salon');
@@ -45,7 +47,6 @@ export default function Canvas2D({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // AI Scanning Simulation State
-  const [aiScanning, setAiScanning] = useState(false);
   const [aiScanStep, setAiScanStep] = useState(0);
   const scanSteps = [
     "AI Analizi Başlatılıyor...",
@@ -80,9 +81,13 @@ export default function Canvas2D({
   const handleAddRoom = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
+    // Boundary check: ensure dimensions are positive
+    const widthMeters = Math.max(0.1, newRoomWidth);
+    const heightMeters = Math.max(0.1, newRoomHeight);
+
     // Position room nicely centered on grid
-    const widthPx = newRoomWidth * gridSize;
-    const heightPx = newRoomHeight * gridSize;
+    const widthPx = widthMeters * gridSize;
+    const heightPx = heightMeters * gridSize;
     const canvasWidth = canvasRef.current?.clientWidth || 600;
     const canvasHeight = canvasRef.current?.clientHeight || 450;
     
@@ -185,35 +190,17 @@ export default function Canvas2D({
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Trigger simulated AI Scan
-  const triggerAIScan = () => {
-    setAiScanning(true);
-    setAiScanStep(0);
-  };
-
   // AI scan step timer
   useEffect(() => {
-    if (!aiScanning) return;
+    if (!aiScanning) {
+      setAiScanStep(0);
+      return;
+    }
 
     if (aiScanStep < scanSteps.length - 1) {
       const timer = setTimeout(() => {
         setAiScanStep(prev => prev + 1);
-      }, 1500);
-      return () => clearTimeout(timer);
-    } else {
-      // Complete scanning and populate gorgeous plan
-      const timer = setTimeout(() => {
-        const aiRooms: Room[] = [
-          { id: 'ai-1', name: 'Salon', x: 60, y: 50, width: 220, height: 180, color: '#10b981', material: 'ahsap' },
-          { id: 'ai-2', name: 'Mutfak', x: 290, y: 50, width: 140, height: 110, color: '#f59e0b', material: 'fayans' },
-          { id: 'ai-3', name: 'Yatak Odası', x: 60, y: 240, width: 150, height: 130, color: '#3b82f6', material: 'ahsap' },
-          { id: 'ai-4', name: 'Banyo', x: 220, y: 240, width: 90, height: 130, color: '#ec4899', material: 'mermer' },
-          { id: 'ai-5', name: 'Koridor', x: 320, y: 170, width: 110, height: 200, color: '#8b5cf6', material: 'beton' },
-        ];
-        setRooms(aiRooms);
-        setAiScanning(false);
-        setSelectedRoomId('ai-1');
-      }, 2000);
+      }, 500); // Faster simulation since App.tsx only gives 3 seconds
       return () => clearTimeout(timer);
     }
   }, [aiScanning, aiScanStep]);
@@ -224,9 +211,13 @@ export default function Canvas2D({
     setRooms(prev => prev.map(r => {
       if (r.id === selectedRoomId) {
         if (field === 'width') {
-          return { ...r, width: parseFloat(value) * gridSize };
+          const val = parseFloat(value);
+          const finalWidth = isNaN(val) ? r.width : Math.max(0.1, val) * gridSize;
+          return { ...r, width: finalWidth };
         } else if (field === 'height') {
-          return { ...r, height: parseFloat(value) * gridSize };
+          const val = parseFloat(value);
+          const finalHeight = isNaN(val) ? r.height : Math.max(0.1, val) * gridSize;
+          return { ...r, height: finalHeight };
         } else {
           return { ...r, name: value };
         }
@@ -546,20 +537,6 @@ export default function Canvas2D({
                 Temizle
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={triggerAIScan}
-              disabled={aiScanning}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded border transition-all cursor-pointer ${
-                aiScanning 
-                  ? 'bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-500/30 active:scale-95'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 shrink-0 animate-pulse" />
-              <span>AI ile Kat Planını Çözümle</span>
-            </button>
           </div>
         </div>
 
