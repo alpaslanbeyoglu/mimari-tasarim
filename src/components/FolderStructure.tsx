@@ -420,11 +420,12 @@ export default function FolderStructure() {
                       type="button"
                       onClick={() => {
                         navigator.clipboard.writeText(selectedNode.contentCode || '');
-                        alert("Kod şablonu kopyalandı!");
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
                       }}
-                      className="hover:text-zinc-100 transition-colors cursor-pointer"
+                      className="hover:text-zinc-100 transition-colors cursor-pointer text-indigo-400 font-sans"
                     >
-                      Kopyala
+                      {copied ? 'Kopyalandı ✓' : 'Kopyala'}
                     </button>
                   </div>
                   <pre className="p-3 bg-[#0c0c0e] border border-zinc-800 rounded-b overflow-x-auto text-[10px] font-mono text-indigo-300/90 leading-normal max-h-52 lg:max-h-none flex-1">
